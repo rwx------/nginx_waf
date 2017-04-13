@@ -48,3 +48,7 @@ init_by_lua_file '/data/www/waf/init.lua';
 access_by_lua_file '/data/www/waf/runtime.lua';
 lua_max_running_timers 1;
 ```
+
+### todo
+1. 优化iptonumber的计算，在init就进行预加载和计算
+2. 优化冗余代码
