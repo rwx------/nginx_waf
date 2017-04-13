@@ -123,7 +123,6 @@ _Conf = {
 	
 	--引入原始设置
 	limitReqModules = Config.limitReqModules,
-	JsJumpModules = Config.JsJumpModules,
 	whiteIpModules = Config.whiteIpModules,
     captchaGray2 = Config.captchaToGray2,
 	debug = Config.debug,
@@ -137,10 +136,8 @@ _Conf = {
 	--解析开关设置
     captchaGray2ModulesIsOn = Config.captchaToGray2.state,
 	limitReqModulesIsOn = Config.limitReqModules.state,
-	JsJumpModulesIsOn = Config.JsJumpModules.state,
 
 	--解析文件到正则
-	JsJumpUrlProtect = parseRuleFile(Config.JsJumpModules.urlProtect),
 	limitUrlProtect = Config.limitReqModules.urlProtect,
 	whiteIpList = Config.whiteIpModules.ipTables,
 	blackIpList = Config.blackIpModules.ipTables,
@@ -150,7 +147,7 @@ _Conf = {
 	reCaptchaPage = readFile2Mem(Config.reCaptchaPage),
 	gray2Page = readFile2Mem(Config.gray2Page),
 
-	--新建字典(用于记录ip访问次数及黑名单)
+	--新建字典(用于记录ip访问次数及灰名单)
 	dict = ngx.shared.guard_dict,
 
 	--新建字典(只用于记录验证码,防止丢失)
@@ -175,15 +172,7 @@ if Config.blockAction == "captcha" then
 	readCaptcha2Dict(_Conf.captchaDir,_Conf.dict_captcha)
 end	
 
---判断JsJumpModules是否开启
-if _Conf.JsJumpModulesIsOn then
-	_Conf.dict_captcha:set("jsOn",1)
-else
-	_Conf.dict_captcha:set("jsOn",0)
-end
-
 --判断是否key是动态生成
 if Config.keyDefine == "dynamic" then
-	_Conf.JsJumpModules.keySecret = makePassword()
 	_Conf.captchaKey = makePassword()
 end	

@@ -62,6 +62,14 @@ end
 
 --白名单模块
 function Guard:ipInWhiteList(ip)
+    local ua = ngx.var.http_user_agent
+    local whiteKey = ngx.md5(ip..ua).."whitekey" --定义white key
+    local white = _Conf.dict:get(whiteKey)
+    if white then
+        self:debug("[ipInWhiteList] match whiteKey: "..white..":"..whiteKey ,ip,"")
+        return true
+    end
+
     --匹配白名单列表
     for _, tables in pairs(_Conf.whiteIpList) do 
         if type(tables) == "table" then
@@ -168,152 +176,6 @@ function Guard:limitReqModules(ip,reqUri,address)
     end
 end
 
---js跳转模块
-function Guard:JsJumpModules(ip,reqUri,address)
-	if ngx.re.match(address,_Conf.JsJumpUrlProtect,"i") then
-		self:debug("[JsJumpModules] address "..address.." match reg ".._Conf.JsJumpUrlProtect,ip,reqUri)
-        local ua = ngx.var.http_user_agent
-		local whiteKey = ngx.md5(ip..ua).."whitejs"	
-		local inWhiteList = _Conf.dict:get(whiteKey)
-				
-		if inWhiteList then -- 如果在白名单
-			self:debug("[JsJumpModules] in white ip list",ip,reqUri)
-			return
-		else
-			-- 如果不在白名单,检测是否有cookie凭证
-			local now = ngx.time() -- 当前时间戳
-			local challengeTimesKey = table.concat({ip,"challengejs"})
-			local challengeTimesValue = _Conf.dict:get(challengeTimesKey)
-			local gray1Key = ngx.md5(ip..ua).."gray1"
-			local cookie_key = ngx.var["cookie_keyjs"] -- 获取cookie密钥
-			local cookie_expire = ngx.var["cookie_expirejs"] -- 获取cookie密钥过期时间
-
-			if cookie_key and cookie_expire then
-				local key_make = ngx.md5(table.concat({ip,_Conf.JsJumpModules.keySecret,cookie_expire}))
-				local key_make = string.sub(key_make,"1","10")
-				if tonumber(cookie_expire) > now and cookie_key == key_make then
-					if challengeTimesValue then
-						_Conf.dict:delete(challengeTimesKey) -- 删除验证失败计数器
-					end					
-					self:debug("[JsJumpModules] cookie key is valid.",ip,reqUri)
-					_Conf.dict:set(whiteKey,0,_Conf.whiteTime) -- 添加ip到白名单
-					return
-				else
-					--验证失败次数加1
-					if challengeTimesValue then
-						_Conf.dict:incr(challengeTimesKey,1)
-						if challengeTimesValue +1 > _Conf.JsJumpModules.verifyMaxFail then
-							self:debug("[JsJumpModules] client "..ip.." challenge cookie failed "..challengeTimesValue.." times,add to gray1List.",ip,reqUri)
-							self:log("[JsJumpModules] client "..ip.." challenge cookie failed "..challengeTimesValue.." times,add to gray1List.")
-                            --添加此ip到灰1名单
-							_Conf.dict:set(gray1Key,0,_Conf.gray1Time) 
-						end	
-					else
-						_Conf.dict:set(challengeTimesKey,1,_Conf.JsJumpModules.amongTime)
-					end
-
-					self:debug("[JsJumpModules] cookie key is invalid.",ip,reqUri)
-
-                    self:jsModulesRedirect(ip, reqUri, 1)
-				end
-			else
-				--如果没有cookie凭证,检测url是否带有cckey参数
-				local keyJs = ngx.re.match(reqUri, "keyjs=([^&]+)","io")
-				local expire = ngx.re.match(reqUri, "expirejs=([^&]+)","io")
-
-				if keyJs and expire then
-					local keyJs = keyJs[1]
-					local expire = expire[1]
-
-					local key_make = ngx.md5(table.concat({ip,_Conf.JsJumpModules.keySecret,expire}))
-					local key_make = string.sub(key_make,"1","10")
-                    
-                    --判断传过来的keyJs参数值是否等于字典记录的值,且没有过期
-					if key_make == keyJs and now < tonumber(expire) then
-						self:debug("[JsJumpModules] ip "..ip.." arg keyjs "..keyJs.." is valid.add ip to white list.",ip,reqUri)
-						if challengeTimesValue then
-							_Conf.dict:delete(challengeTimesKey) --删除验证失败计数器
-						end							
-						_Conf.dict:set(whiteKey,0,_Conf.whiteTime) --添加ip到白名单
-						ngx.header['Set-Cookie'] = {"keyjs="..key_make.."; path=/", "expirejs="..expire.."; path=/"} --发送cookie凭证
-						return
-                    --如果不相等，则再发送302转向
-					else 
-						if challengeTimesValue then
-						    --验证失败次数加1
-							_Conf.dict:incr(challengeTimesKey,1)
-							if challengeTimesValue + 1 > _Conf.JsJumpModules.verifyMaxFail then
-								self:debug("[JsJumpModules] client "..ip.." challenge jskey failed "..challengeTimesValue.." times,add to blacklist.",ip,reqUri)
-								self:log("[JsJumpModules] client "..ip.." challenge jskey failed "..challengeTimesValue.." times,add to blacklist.")
-                                --添加此ip到灰1名单
-                                _Conf.dict:set(gray1Key,0,_Conf.gray1Time) 
-							end	
-						else
-							_Conf.dict:set(challengeTimesKey,1,_Conf.JsJumpModules.amongTime)
-						end	
-						
-						self:debug("[JsJumpModules] ip "..ip.." arg keyjs is invalid.",ip,reqUri)
-                        self:jsModulesRedirect(ip, reqUri)
-					end
-				else
-					if challengeTimesValue then
-                        --验证失败次数加1
-						_Conf.dict:incr(challengeTimesKey,1)
-						if challengeTimesValue + 1 > _Conf.JsJumpModules.verifyMaxFail then
-							self:debug("[JsJumpModules] client "..ip.." challenge jskey failed "..challengeTimesValue.." times,add to blacklist.",ip,reqUri)
-							self:log("[JsJumpModules] client "..ip.." challenge jskey failed "..challengeTimesValue.." times,add to blacklist.")
-                            --添加此ip到灰1名单
-							_Conf.dict:set(gray1Key,0,_Conf.gray1Time) 
-						end	
-					else
-						_Conf.dict:set(challengeTimesKey,1,_Conf.JsJumpModules.amongTime)
-					end
-					
-                    self:jsModulesRedirect(ip, reqUri)
-				end
-			end	
-		end
-	end
-end
-
--- js验证跳转方法
-function Guard:jsModulesRedirect(ip, reqUri, cookie_del)
-
-    --定义转向的url
-    local expire = now + _Conf.keyExpire
-    local key_new = ngx.md5(table.concat({ip,_Conf.JsJumpModules.keySecret,expire}))
-    local key_new = string.sub(key_new,"1","10")
-
-    --定义转向的url
-    local newUrl = ''
-    local newReqUri = ngx.re.match(reqUri, "(.*?)\\?(.+)")
-    if newReqUri then
-        local reqUriNoneArgs = newReqUri[1]
-        local args = newReqUri[2]
-        --删除cckey和keyexpire
-        local newArgs = ngx.re.gsub(args, "[&?]?keyjs=[^&]+&?|expirejs=[^&]+&?", "", "i")
-        if newArgs == "" then
-            newUrl = table.concat({reqUriNoneArgs,"?keyjs=",key_new,"&expirejs=",expire})
-        else
-            newUrl = table.concat({reqUriNoneArgs,"?",newArgs,"&keyjs=",key_new,"&expirejs=",expire})
-        end					
-    else
-        newUrl = table.concat({reqUri,"?keyjs=",key_new,"&expirejs=",expire})
-    end
-
-    --定义js跳转代码
-    local jsJumpCode=table.concat({"<script>window.location.href='",newUrl,"';</script>"})
-    ngx.header.content_type = "text/html"
-    
-    --删除cookie
-    if cookie_del == 1 then
-        ngx.header['Set-Cookie'] = {"keyjs=; path=/", "expirejs=; expires=Sat, 01-Jan-2000 00:00:00 GMT; path=/"}					
-    end
-
-    ngx.print(jsJumpCode)
-    ngx.exit(200)	
-end
-
 --获取验证码
 function Guard:getCaptcha()
 	math.randomseed(ngx.now()) --随机种子
@@ -349,8 +211,11 @@ function Guard:verifyCaptcha(ip)
 		self:debug("[verifyCaptcha] captcha is valid.delete from blacklist",ip,"")
         local ua = ngx.var.http_user_agent
         local gray1Key = ngx.md5(ip..ua).."gray1"
+        local limitReqKey = ngx.md5(ip..ua).."limitreqkey" --定义limitreq key
+        local whiteKey = ngx.md5(ip..ua).."whitekey" --定义limitreq key
 		_Conf.dict:delete(gray1Key) --从灰1名单删除
-		_Conf.dict:delete(ip.."limitreqkey") --访问记录删除
+		_Conf.dict:delete(limitReqKey) --访问记录删除
+		_Conf.dict:set(whiteKey,1,_Conf.whiteTime) --加入白名单
 		local expire = ngx.time() + _Conf.keyExpire
 		local captchaKey = ngx.md5(table.concat({ip,_Conf.captchaKey,expire}))
 		local captchaKey = string.sub(captchaKey,"1","10")
@@ -441,7 +306,7 @@ function Guard:captchaAction(ip,reqUri)
             local gray2Key = ngx.md5(ip..ua).."gray2"
 			self:debug("[captchaAction] ip "..ip.. " request exceed ".._Conf.captchaGray2.maxReqs,ip,reqUri)
 			self:log("[captchaAction] IP "..ip.." visit "..newReqTimes.." times,iptables block it.")
-            _Conf.dict:set(gray2Key, 1, _Conf.gray2Modules.gray1Time)
+            _Conf.dict:set(gray2Key, 1, _Conf.gray2Time)
 		end
 	end
 
