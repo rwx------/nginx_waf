@@ -9,14 +9,14 @@ nginx\_waf是基于ngx\_lua,以lua脚本语言开发的防cc攻击软件。继�
 3. 支持直接断开恶意访客的连接
 4. 支持白名单/黑名单功能
 
-## 部署HttpGuard
-### 安装ngx\_lua
+## 部署nginx_waf
+### 安装ngx_lua
 
 按照ngx\_lua官网手动安装
 
-### 安装nginx\_waf
+### 安装nginx_waf
 
-假设我们把HttpGuard安装到/data/www/waf/，当然你可以选择安装在任意目录。
+假设我们把nginx_waf安装到/data/www/waf/，当然你可以选择安装在任意目录。
 
 ```
 cd /data/www
