@@ -52,7 +52,7 @@ local Config = {
 	gray2Time = 7200,
 
 	-- JsJumpModules 验证通过后,ip在白名单的时间
-	whiteTime = 600,
+	whiteTime = 30,
 
 	-- 用于生成token密码的key过期时间
 	keyExpire = 600,
