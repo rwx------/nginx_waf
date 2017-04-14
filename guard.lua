@@ -62,6 +62,7 @@ end
 
 --白名单模块
 function Guard:ipInWhiteList(ip)
+    -- 字典白名单列表
     local ua = ngx.var.http_user_agent
     local whiteKey = ngx.md5(ip..ua).."whitekey" --定义white key
     local white = _Conf.dict:get(whiteKey)
@@ -70,7 +71,7 @@ function Guard:ipInWhiteList(ip)
         return true
     end
 
-    --匹配白名单列表
+    -- 配置文件白名单列表
     for _, tables in pairs(_Conf.whiteIpList) do 
         if type(tables) == "table" then
             for _, i in pairs(tables) do
@@ -93,6 +94,20 @@ function Guard:ipInWhiteList(ip)
     return false
 end
 
+-- ua白名单模块
+function Guard:uaInWhiteList(ip, reqUri)
+    local ua = ngx.var.http_user_agent
+    local m, err = ngx.re.match(ua, _Conf.whiteUaList, "io")
+    if m then
+        self:debug("[uaInWhiteList] match uaWhiteList. ua: "..ua,ip,"")
+        self:log("[uaInWhiteList] match uaWhiteList. ua: "..ua.." ip: "..ip.." reqUri: "..reqUri)
+        return true
+    end 
+
+    return false
+
+end
+
 --黑名单模块
 function Guard:blackListModules(ip,reqUri)
     --匹配黑名单列表
@@ -106,10 +121,12 @@ function Guard:blackListModules(ip,reqUri)
                     eIp = tonumber(self:ipToDecimal(string.sub(i, e + 1, string.len(i))))
                     if numIp >= sIp and numIp <= eIp then
                         self:debug("[blackListModules] return forbiddenAction",ip,reqUri)
+                        self:log("[blackListModules] ip in blackList. Return forbiddenAction. ip: "..ip.." reqUri: "..reqUri)
                         self:forbiddenAction()
                     end
                 elseif ip == i then
                     self:debug("[blackListModules] return forbiddenAction",ip,reqUri)
+                    self:log("[blackListModules] ip in blackList. Return forbiddenAction. ip: "..ip.." reqUri: "..reqUri)
                     self:forbiddenAction()
                 end
             end
@@ -127,7 +144,6 @@ function Guard:gray1ListModules(ip,reqUri)
         self:debug("[gray1ListModules] ip "..ip.." in gray1list",ip,reqUri)
         self:gray1Action(ip,reqUri) --存在则执行相应动作
     end
-
 end
 
 -- 灰2名单模块
@@ -138,6 +154,7 @@ function Guard:gray2ListModules(ip,reqUri)
     --匹配灰名单字典
     if _Conf.dict:get(gray2Key) then
         self:debug("[gray2ListModules] ip "..ip.." in gray2list",ip,reqUri)
+        self:log("[gray2ListModules] "..ip.." in gray2list. gray2Key: "..gray2Key.." reqUri: "..reqUri)
         self:gray2Action() --存在则执行相应动作
     end
 
@@ -244,10 +261,12 @@ function Guard:verifyCaptcha(ip)
 		    self:debug("[verifyCaptcha] ip+ua exceeds gray2 maxReqs "..newReqTimes,ip,"")
             local gray2Key = ngx.md5(ip..ua).."gray2"
             _Conf.dict:set(gray2Key, 1, _Conf.gray2Time)
+		    self:log("[verifyCaptcha] ip+ua exceeds gray2 maxReqs :"..newReqTimes.." ip: "..ip.." gray2Key: "..gray2Key)
             self:gray2Action()    
         else
             --重新发送验证码页面
             self:debug("[verifyCaptcha] captcha invalid",ip,"")
+		    self:log("[verifyCaptcha] captcha invalid. ip :"..ip)
             ngx.header.content_type = "text/html"
 
             -- 不做缓存，CDN优化
@@ -329,19 +348,17 @@ function Guard:gray1Action(ip,reqUri)
         local now = ngx.time()
         local key_make = ngx.md5(table.concat({ip,_Conf.captchaKey,cookie_expire}))
         local key_make = string.sub(key_make,"1","10")
-        self:debug("[gray1Action] cookie_expire "..cookie_expire,ip,reqUri)
-        self:debug("[gray1Action] cookie_key "..cookie_key,ip,reqUri)
-        self:debug("[gray1Action] now "..now,ip,reqUri)
-        self:debug("[gray1Action] key_make "..key_make,ip,reqUri)
         if tonumber(cookie_expire) > now and cookie_key == key_make then
             self:debug("[gray1Action] cookie key is valid.",ip,reqUri)
             return
         else
             self:debug("[gray1Action] cookie key is invalid",ip,reqUri)
+            self:log("[gray1Action] cookie key is invalid. ip: "..ip.." reqUri: "..reqUri)
             self:captchaAction(ip,reqUri)
         end	
     else	
         self:debug("[gray1Action] return captchaAction",ip,reqUri)
+        self:log("[gray1Action] return captchaAction. ip: "..ip.." reqUri: "..reqUri)
         self:captchaAction(ip,reqUri)
     end	
 end

@@ -26,7 +26,8 @@ elseif ngx.re.match(uri,"/verify-captcha.jpg$","io") then
 --过滤请求
 else
 	--白名单模块
-	if not Guard:ipInWhiteList(ip) then
+	if not Guard:ipInWhiteList(ip) and not Guard:uaInWhiteList(ip) then
+
 		--黑名单模块
 		Guard:blackListModules(ip,reqUri)
 
@@ -40,5 +41,6 @@ else
 		if _Conf.limitReqModulesIsOn then --limitReq模块是否开启
             Guard:limitReqModules(ip,reqUri,address)
 		end
+
 	end	
 end

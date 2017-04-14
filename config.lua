@@ -75,8 +75,11 @@ local Config = {
 	-- 是否开启debug日志
 	debug = false,
 
-	--日志目录,一般不需要修改.但需要设置logs所有者为nginx运行用户，如nginx运行用户为www，则命令为chown www logs
+	-- 日志目录,一般不需要修改.但需要设置logs所有者为nginx运行用户，如nginx运行用户为www，则命令为chown www logs
 	logPath = baseDir.."logs/",
+
+    -- ua白名单
+    whiteUaModules = { state = true, uaTables = [[baidu|spider|googlebot|sogou|slurp|bingbot|facebot|facebookexternalhit|ia_archiver|yandexbot|duckduckbot|msnbot]] }
 }
 
 return Config

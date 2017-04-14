@@ -106,6 +106,7 @@ _Conf = {
 	--引入原始设置
 	limitReqModules = Config.limitReqModules,
 	whiteIpModules = Config.whiteIpModules,
+	whiteUaModules = Config.whiteUaModules,
     captchaGray2 = Config.captchaToGray2,
 	debug = Config.debug,
 	logPath = Config.logPath,
@@ -123,6 +124,7 @@ _Conf = {
 	limitUrlProtect = Config.limitReqModules.urlProtect,
 	whiteIpList = Config.whiteIpModules.ipTables,
 	blackIpList = Config.blackIpModules.ipTables,
+	whiteUaList = Config.whiteUaModules.uaTables,
 
 	--读取文件到内存
 	captchaPage = readFile2Mem(Config.captchaPage),
