@@ -53,3 +53,10 @@ lua_max_running_timers 1;
 1. 优化iptonumber的计算，在init就进行预加载和计算
 2. 优化冗余代码
 3. 过滤特定ua
+
+### 感谢
+该产品参考并大量借鉴了https://github.com/love_shell/ngx_lua_waf 和 https://github.com/centos-bz/HttpGuard ，感谢他们的工作.
+相较于这两个模块
+增加了ip段的黑名单白名单精确控制。
+精简了部分功能。
+可进行ua过滤
