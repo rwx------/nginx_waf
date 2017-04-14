@@ -9,9 +9,9 @@ local jsModule = ngx.var.js_module
 local cookieModule = ngx.var.cookie_module
 
 --判断是某种url匹配模式
-if _Conf.uriMode then
+if _Conf.urlMatchMode == 'uri' then
 	address = uri
-elseif _Conf.requestUriMode then
+else
 	address = reqUri
 end	
 
@@ -40,18 +40,5 @@ else
 		if _Conf.limitReqModulesIsOn then --limitReq模块是否开启
             Guard:limitReqModules(ip,reqUri,address)
 		end
---[[
-		--js跳转模块
-		local jsOn = _Conf.dict_captcha:get("jsOn")
-		if jsOn == 1 then --判断js跳转模块是否开启
-			if not (jsModule == "off") then
-				Guard:debug("[JsJumpModules] JsJumpModules is on.",ip,reqUri)
-				Guard:JsJumpModules(ip,reqUri,address)
-			end
-		elseif jsModule == "on" then
-			Guard:debug("[JsJumpModules] JsJumpModules is on.",ip,reqUri)
-			Guard:JsJumpModules(ip,reqUri,address)				
-		end
-]]--
 	end	
 end

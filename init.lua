@@ -75,24 +75,6 @@ local function actionIsOn3(action)
 	end	
 end
 
---解析uri匹配模式
-local function urlMode1(mode)
-	if mode == "uri" then
-		return true
-	else
-		return false
-	end
-end
-
-local function urlMode2(mode)
-	if mode == "requestUri" then
-		return true
-	else
-		return false
-	end	
-end
-
-
 --读取文件到内存
 local function readFile2Mem(file)
 	local fp = io.open(file,"r")
@@ -160,8 +142,7 @@ _Conf = {
 	forbiddenAction = actionIsOn2(Config.blockAction),
 
 	--解析url匹配模式
-	uriMode = urlMode1(Config.urlMatchMode),
-	requestUriMode = urlMode2(Config.urlMatchMode),
+	urlMatchMode = Config.urlMatchMode,
 
 	normalCount = 0,
 	exceedCount = 0,

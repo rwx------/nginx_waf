@@ -58,8 +58,8 @@ local Config = {
 	keyExpire = 600,
 
 	-- 匹配url模式，可选值requestUri,uri
-	-- 值requestUri时,url-protect目录下的正则匹配的是浏览器最初请求的地址且没有被decode,带参数的链接
-	-- 值为uri时, url-protect目录下的正则匹配的是经过重写过的地址,不带参数,且已经decode.
+	-- 值requestUri时,url正则匹配的是浏览器最初请求的地址且没有被decode,带参数的链接
+	-- 值为uri时, url正则匹配的是经过重写过的地址,不带参数,且已经decode.
 	urlMatchMode = "uri",
 	
 	-- 验证码页面路径,一般不需要修改
