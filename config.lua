@@ -26,24 +26,16 @@ local Config = {
 	-- state : 为此模块的状态，表示开启或关闭，可选值为On或Off;
 	-- maxReqs，amongTime : 在amongTime秒内允许请求的最大次数maxReqs，如默认的是在10s内最大允许请求50次。
 	-- urlProtect : 指定限制请求次数的url正则表达式文件，默认值为\.php$，表示只限制php的请求(当然，当urlMatchMode = "uri"时，此正则才能起作用)
-	limitReqModules = { state = true , maxReqs = 5 , amongTime = 10, urlProtect = urls },
-
+	limitReqModules = { state = true , maxReqs = 20 , amongTime = 120, urlProtect = urls },
 
 	-- 用于当输入验证码验证通过时,生成key的密码.如果上面的keyDefine为dynamic，就不需要修改
 	captchaKey = "K4QEaHjwyF",
 
-	-- ip在黑名单时执行的动作(可选值captcha,forbidden,iptables)
 	-- 值为captcha时,表示ip在黑名单后返回带有验证码的页面,输入正确的验证码才允许继续访问网站
-	-- 值为forbidden时,表示ip在黑名单后,服务器会直接断开与用户的连接.
-	-- 值为iptables时,表示ip在黑名单后,http-guard会用iptables封锁此ip的连接
-	-- 当值为iptables时,需要为nginx运行用户设置密码及添加到sudo以便能执行iptables命令。假设nginx运行用户为www,设置方法为：
-	-- 1.设置www密码，命令为passwd www
-	-- 2.以根用户执行visudo命令，添加www  ALL=(root) /sbin/iptables -I INPUT -p tcp -s [0-9.]* --dport 80 -j DROP
-	-- 3.以根用户执行visudo命令，找到Default requiretty注释，即更改为#Default requiretty，如果找不到此设置，就不需要改。
 	blockAction = "captcha",
 
 	-- 访问验证码页面超过一定次数加入到灰2名单
-	captchaToGray2 = { state = true, maxReqs = 5 , amongTime = 10},
+	captchaToGray2 = { state = true, maxReqs = 10 , amongTime = 120},
 
 	-- 表示http-guard封锁ip的灰1名单时间
 	gray1Time = 600,
@@ -52,7 +44,7 @@ local Config = {
 	gray2Time = 7200,
 
 	-- JsJumpModules 验证通过后,ip在白名单的时间
-	whiteTime = 30,
+	whiteTime = 7200,
 
 	-- 用于生成token密码的key过期时间
 	keyExpire = 600,
@@ -75,13 +67,13 @@ local Config = {
 	whiteIpModules = { state = true, ipTables = ipWhitelist },
 
 	-- 黑名单ip文件,文件内容为正则表达式。
-	blackIpModules = { state = "On", ipTables = ipBlacklist },
+	blackIpModules = { state = true, ipTables = ipBlacklist },
 
 	-- 指定验证码图片目录,一般不需要修改
 	captchaDir = baseDir.."captcha/",
 
 	-- 是否开启debug日志
-	debug = true,
+	debug = false,
 
 	--日志目录,一般不需要修改.但需要设置logs所有者为nginx运行用户，如nginx运行用户为www，则命令为chown www logs
 	logPath = baseDir.."logs/",
