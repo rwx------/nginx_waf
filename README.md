@@ -52,3 +52,4 @@ lua_max_running_timers 1;
 ### todo
 1. 优化iptonumber的计算，在init就进行预加载和计算
 2. 优化冗余代码
+3. 过滤特定ua
