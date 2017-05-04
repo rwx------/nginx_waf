@@ -109,6 +109,7 @@ _Conf = {
 	whiteUaModules = Config.whiteUaModules,
     captchaGray2 = Config.captchaToGray2,
 	debug = Config.debug,
+    logOnly = Config.logOnly,
 	logPath = Config.logPath,
 	gray1Time = Config.gray1Time,
 	gray2Time = Config.gray2Time,

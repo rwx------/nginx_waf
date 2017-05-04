@@ -64,6 +64,9 @@ end
 function Guard:ipInWhiteList(ip)
     -- 字典白名单列表
     local ua = ngx.var.http_user_agent
+    if ua == nil then
+        ua = ''
+    end
     local whiteKey = ngx.md5(ip..ua).."whitekey" --定义white key
     local white = _Conf.dict:get(whiteKey)
     if white then
@@ -97,6 +100,9 @@ end
 -- ua白名单模块
 function Guard:uaInWhiteList(ip, reqUri)
     local ua = ngx.var.http_user_agent
+    if ua == nil then
+        ua = ''
+    end
     local m, err = ngx.re.match(ua, _Conf.whiteUaList, "io")
     if m then
         self:debug("[uaInWhiteList] match uaWhiteList. ua: "..ua,ip,"")
@@ -122,12 +128,16 @@ function Guard:blackListModules(ip,reqUri)
                     if numIp >= sIp and numIp <= eIp then
                         self:debug("[blackListModules] return forbiddenAction",ip,reqUri)
                         self:log("[blackListModules] ip in blackList. Return forbiddenAction. ip: "..ip.." reqUri: "..reqUri)
-                        self:forbiddenAction()
+                        if not _Conf.logOnly then
+                            self:forbiddenAction()
+                        end
                     end
                 elseif ip == i then
                     self:debug("[blackListModules] return forbiddenAction",ip,reqUri)
                     self:log("[blackListModules] ip in blackList. Return forbiddenAction. ip: "..ip.." reqUri: "..reqUri)
-                    self:forbiddenAction()
+                    if not _Conf.logOnly then
+                        self:forbiddenAction()
+                    end
                 end
             end
         end
@@ -137,27 +147,37 @@ end
 -- 灰1名单模块
 function Guard:gray1ListModules(ip,reqUri)
     local ua = ngx.var.http_user_agent
+    if ua == nil then
+        ua = ''
+    end
 	local gray1Key = ngx.md5(ip..ua).."gray1"
 
     --匹配灰名单字典
     if _Conf.dict:get(gray1Key) then
         self:debug("[gray1ListModules] ip "..ip.." in gray1list",ip,reqUri)
-        self:gray1Action(ip,reqUri) --存在则执行相应动作
+        self:log("[gray1ListModules] ip "..ip.." in gray1list. reqUri: "..reqUri)
+        if not _Conf.logOnly then
+            self:gray1Action(ip,reqUri) --存在则执行相应动作
+        end
     end
 end
 
 -- 灰2名单模块
 function Guard:gray2ListModules(ip,reqUri)
     local ua = ngx.var.http_user_agent
+    if ua == nil then
+        ua = ''
+    end
 	local gray2Key = ngx.md5(ip..ua).."gray2"
 
     --匹配灰名单字典
     if _Conf.dict:get(gray2Key) then
         self:debug("[gray2ListModules] ip "..ip.." in gray2list",ip,reqUri)
         self:log("[gray2ListModules] "..ip.." in gray2list. gray2Key: "..gray2Key.." reqUri: "..reqUri)
-        self:gray2Action() --存在则执行相应动作
+        if not _Conf.logOnly then
+            self:gray2Action() --存在则执行相应动作
+        end
     end
-
 end
 
 --限制请求速率模块
@@ -166,6 +186,9 @@ function Guard:limitReqModules(ip,reqUri,address)
         if ngx.re.match(address,u,"io") then	
             self:debug("[limitReqModules] address "..address.." match reg "..u,ip,reqUri)	
             local ua = ngx.var.http_user_agent
+            if ua == nil then
+                ua = ''
+            end
             local gray1Key = ngx.md5(ip..ua).."gray1"
             local limitReqKey = ngx.md5(ip..ua).."limitreqkey" --定义limitreq key
             local reqTimes = _Conf.dict:get(limitReqKey) --获取此ip请求的次数
@@ -185,9 +208,9 @@ function Guard:limitReqModules(ip,reqUri,address)
             --判断是否请求数大于阀值
             if newReqTimes > _Conf.limitReqModules.maxReqs then 
                 self:debug("[limitReqModules] ip "..ip.. " request exceed ".._Conf.limitReqModules.maxReqs,ip,reqUri)
+                self:log("[limitReqModules] IP "..ip.." visit "..newReqTimes.." times,block it.")
                 --添加此ip到灰1名单
                 _Conf.dict:set(gray1Key,0,_Conf.gray1Time) 
-                self:log("[limitReqModules] IP "..ip.." visit "..newReqTimes.." times,block it.")
             end
         end
     end
@@ -224,9 +247,14 @@ function Guard:verifyCaptcha(ip)
 	postValue = string.lower(postValue)
 	self:debug("[verifyCaptcha] get post arg response "..postValue,ip,"")
 	local captchaValue = _Conf.dict_captcha:get(captchaNum) --从字典获取post value对应的验证码值
+
+    local ua = ngx.var.http_user_agent
+    if ua == nil then
+        ua = ''
+    end
+
 	if captchaValue == postValue then --比较验证码是否相等
 		self:debug("[verifyCaptcha] captcha is valid.delete from blacklist",ip,"")
-        local ua = ngx.var.http_user_agent
         local gray1Key = ngx.md5(ip..ua).."gray1"
         local limitReqKey = ngx.md5(ip..ua).."limitreqkey" --定义limitreq key
         local whiteKey = ngx.md5(ip..ua).."whitekey" --定义limitreq key
@@ -241,7 +269,6 @@ function Guard:verifyCaptcha(ip)
 		ngx.header['Set-Cookie'] = {"captchaKey="..captchaKey.."; path=/", "captchaExpire="..expire.."; path=/"}
 		return ngx.redirect(preurl) --返回上次访问url
 	else
-        local ua = ngx.var.http_user_agent
 		local captchaReqKey = ngx.md5(ip..ua).."captchareqkey" --定义captcha req key
 		local reqTimes = _Conf.dict:get(captchaReqKey) --获取此ip验证码请求的次数
 
@@ -307,6 +334,9 @@ function Guard:captchaAction(ip,reqUri)
 	-- 访问验证码超过一定次数,加入灰2名单
 	if _Conf.captchaGray2ModulesIsOn then
         local ua = ngx.var.http_user_agent
+        if ua == nil then
+            ua = ''
+        end
 		local captchaReqKey = ngx.md5(ip..ua).."captchareqkey" --定义captcha req key
 		local reqTimes = _Conf.dict:get(captchaReqKey) --获取此ip验证码请求的次数
 		--增加一次请求记录

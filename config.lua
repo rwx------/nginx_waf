@@ -73,9 +73,13 @@ local Config = {
 	captchaDir = baseDir.."captcha/",
 
 	-- 是否开启debug日志
-	debug = false,
+	debug = true,
 
-	-- 日志目录,一般不需要修改.但需要设置logs所有者为nginx运行用户，如nginx运行用户为www，则命令为chown www logs
+    -- 是否开启logOnly模式
+    logOnly = false,
+
+	-- 日志目录,一般不需要修改.但需要设置logs所有者为nginx运行用户，
+    -- 如nginx运行用户为www，则命令为chown www logs
 	logPath = baseDir.."logs/",
 
     -- ua白名单
