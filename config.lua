@@ -79,7 +79,7 @@ local Config = {
 	logPath = baseDir.."logs/",
 
     -- ua白名单
-    whiteUaModules = { state = true, uaTables = [[baidu|spider|googlebot|sogou|slurp|bingbot|facebot|facebookexternalhit|ia_archiver|yandexbot|duckduckbot|msnbot]] }
+    whiteUaModules = { state = true, uaTables = [[baidu|spider|googlebot|sogou|slurp|bingbot|facebot|facebookexternalhit|ia_archiver|yandexbot|duckduckbot|msnbot|DNSPod-Monitor|360JK]] }
 }
 
 return Config
