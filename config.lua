@@ -82,8 +82,12 @@ local Config = {
     -- 如nginx运行用户为www，则命令为chown www logs
 	logPath = baseDir.."logs/",
 
+    -- 封禁选项，可选值ip, ipua
+    -- 值ip时，直接封ip
+    -- 值ipua时，封ip+ua的组合
+    banMode = "ipua"
+
     -- ua白名单
     whiteUaModules = { state = true, uaTables = [[baidu|spider|googlebot|sogou|slurp|bingbot|facebot|facebookexternalhit|ia_archiver|yandexbot|duckduckbot|msnbot|DNSPod-Monitor|360JK]] }
 }
-
 return Config

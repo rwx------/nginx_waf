@@ -116,6 +116,7 @@ _Conf = {
 	whiteTime = Config.whiteTime,
 	keyExpire = Config.keyExpire,
 	captchaKey = Config.captchaKey,
+    banMode = Config.banMode,
 
 	--解析开关设置
     captchaGray2ModulesIsOn = Config.captchaToGray2.state,
