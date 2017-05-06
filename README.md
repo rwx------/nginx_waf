@@ -52,9 +52,9 @@ lua_max_running_timers 1;
 ### todo
 - 优化: iptonumber的计算，在init就进行预加载和计算
 - 新增: redis支持，多机器共享黑/白/灰名单
-- 优化: 无ua情况下的处理
-- 优化: 关于封禁时以ip还是ip+ua的形式的选择开关
-- 新增: log only 模式，不真正进行封禁操作，只记录日志。
+- ~~优化: 无ua情况下的处理~~
+- ~~优化: 关于封禁时以ip还是ip+ua的形式的选择开关~~
+- ~~新增: log only 模式，不真正进行封禁操作，只记录日志。~~
 
 ### 感谢
 该产品参考并大量借鉴了https://github.com/love_shell/ngx_lua_waf 和 https://github.com/centos-bz/HttpGuard ，感谢他们的工作.
